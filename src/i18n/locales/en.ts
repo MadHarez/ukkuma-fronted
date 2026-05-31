@@ -126,10 +126,12 @@ export default {
   },
   projects: {
     title: 'Projects',
-    subtitle: 'Collaborations and creations, in progress and complete.',
+    subtitle: 'UKKUMA’s core service offerings and methodology frameworks.',
     empty: 'No projects yet.',
     role: 'Role',
     year: 'Year',
+    framework: 'Framework',
+    bestFor: 'Best for',
     visit: 'View project',
   },
   booking: {

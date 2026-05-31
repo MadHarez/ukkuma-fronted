@@ -121,10 +121,12 @@ export default {
   },
   projects: {
     title: '项目',
-    subtitle: '正在进行与已完成的合作与创作。',
+    subtitle: 'UKKUMA 的核心服务项目与方法论框架。',
     empty: '暂时还没有项目。',
     role: '角色',
     year: '年份',
+    framework: '框架',
+    bestFor: '适合',
     visit: '查看项目',
   },
   booking: {

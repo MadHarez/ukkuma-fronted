@@ -52,8 +52,11 @@ onMounted(async () => {
               class="relative mb-5 flex h-52 w-full items-end overflow-hidden rounded-2xl p-5"
               :style="{ background: p.cover }"
             >
-              <span class="rounded-full bg-black/25 px-3 py-1 text-[var(--text-caption)] font-semibold text-white backdrop-blur">
-                {{ p.year }}
+              <span
+                v-if="p.framework || p.year"
+                class="rounded-full bg-black/25 px-3 py-1 text-[var(--text-caption)] font-semibold text-white backdrop-blur"
+              >
+                {{ p.framework || p.year }}
               </span>
             </div>
             <h3 class="text-[var(--text-title2)] font-bold">{{ L(p.title) }}</h3>

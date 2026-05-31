@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import GlassButton from '@/components/ui/GlassButton.vue'
 import GlassCard from '@/components/ui/GlassCard.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import BlogContent from '@/components/ui/BlogContent.vue'
 import { projectService } from '@/api/services'
 import { useLocalized } from '@/composables/useLocalized'
 import type { Project } from '@/types'
@@ -47,11 +48,19 @@ const paragraphs = computed(() =>
         </h1>
 
         <div class="mt-6 grid gap-4 sm:grid-cols-3">
-          <GlassCard padding="sm">
+          <GlassCard v-if="project.framework" padding="sm">
+            <p class="text-[var(--text-footnote)] text-muted">{{ t('projects.framework') }}</p>
+            <p class="mt-1 font-semibold">{{ project.framework }}</p>
+          </GlassCard>
+          <GlassCard v-if="project.bestFor" padding="sm">
+            <p class="text-[var(--text-footnote)] text-muted">{{ t('projects.bestFor') }}</p>
+            <p class="mt-1 font-semibold">{{ L(project.bestFor) }}</p>
+          </GlassCard>
+          <GlassCard v-if="project.role" padding="sm">
             <p class="text-[var(--text-footnote)] text-muted">{{ t('projects.role') }}</p>
             <p class="mt-1 font-semibold">{{ L(project.role) }}</p>
           </GlassCard>
-          <GlassCard padding="sm">
+          <GlassCard v-if="project.year" padding="sm">
             <p class="text-[var(--text-footnote)] text-muted">{{ t('projects.year') }}</p>
             <p class="mt-1 font-semibold">{{ project.year }}</p>
           </GlassCard>
@@ -69,7 +78,8 @@ const paragraphs = computed(() =>
           </GlassCard>
         </div>
 
-        <div class="mt-8 space-y-5">
+        <BlogContent v-if="project.blocks?.length" :blocks="project.blocks" class="mt-8" />
+        <div v-else class="mt-8 space-y-5">
           <p
             v-for="(para, i) in paragraphs"
             :key="i"

@@ -4,6 +4,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import GlassButton from '@/components/ui/GlassButton.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import BlogContent from '@/components/ui/BlogContent.vue'
 import { blogService } from '@/api/services'
 import { useLocalized } from '@/composables/useLocalized'
 import type { BlogPost } from '@/types'
@@ -52,7 +53,8 @@ const paragraphs = computed(() => (post.value ? L(post.value.content).split('\n\
           {{ L(post.title) }}
         </h1>
         <div class="mt-8 h-60 w-full rounded-[var(--radius-glass-lg)]" :style="{ background: post.cover }" />
-        <div class="prose-glass mt-8 space-y-5">
+        <BlogContent v-if="post.blocks?.length" :blocks="post.blocks" class="mt-8" />
+        <div v-else class="mt-8 space-y-5">
           <p
             v-for="(para, i) in paragraphs"
             :key="i"
