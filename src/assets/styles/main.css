@@ -1,0 +1,216 @@
+@import 'tailwindcss';
+
+/* Dark mode is driven by a `.dark` class on <html> (managed by the theme store). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * UKKUMA Design System — Apple HIG + "Liquid Glass" (2025)
+ * Principles: Clarity, Deference, Depth, Hierarchy, Harmony, Consistency.
+ */
+@theme {
+  /* San Francisco system font stack with sensible fallbacks. */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', 'PingFang SC', system-ui, sans-serif;
+
+  /* Brand palette — calm, mystical, energetic. */
+  --color-aura-50: #f5f3ff;
+  --color-aura-100: #ede9fe;
+  --color-aura-200: #ddd6fe;
+  --color-aura-300: #c4b5fd;
+  --color-aura-400: #a78bfa;
+  --color-aura-500: #8b5cf6;
+  --color-aura-600: #7c3aed;
+  --color-aura-700: #6d28d9;
+  --color-aura-800: #5b21b6;
+  --color-aura-900: #4c1d95;
+
+  --color-ember-400: #fb923c;
+  --color-ember-500: #f97316;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+
+  /* Apple system type scale (pt → rem). Body default is 17pt. */
+  --text-caption: 0.75rem; /* 12 */
+  --text-footnote: 0.8125rem; /* 13 */
+  --text-subhead: 0.9375rem; /* 15 */
+  --text-body: 1.0625rem; /* 17 */
+  --text-headline: 1.0625rem; /* 17 semibold */
+  --text-title3: 1.25rem; /* 20 */
+  --text-title2: 1.375rem; /* 22 */
+  --text-title1: 1.75rem; /* 28 */
+  --text-largetitle: 2.125rem; /* 34 */
+
+  /* Continuous (squircle-ish) corner radii. */
+  --radius-glass: 1.5rem;
+  --radius-glass-lg: 2rem;
+
+  /* Apple-like spring/ease curves for motion. */
+  --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root {
+  color-scheme: light;
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-shadow: 0 8px 32px rgba(31, 23, 64, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.85);
+  --page-text: #1c1c1e;
+  --page-text-muted: rgba(28, 28, 30, 0.6);
+}
+
+.dark {
+  color-scheme: dark;
+  --glass-bg: rgba(28, 26, 46, 0.5);
+  --glass-bg-strong: rgba(28, 26, 46, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --glass-highlight: rgba(255, 255, 255, 0.16);
+  --page-text: #f5f5f7;
+  --page-text-muted: rgba(245, 245, 247, 0.62);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--page-text);
+  background-color: #eef0f6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+}
+
+.dark body {
+  background-color: #0b0a14;
+}
+
+/* Ambient, slowly drifting aurora background — the "depth" beneath the glass. */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora-bg::before,
+.aurora-bg::after {
+  content: '';
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.6;
+  animation: aurora-drift 24s var(--ease-glass) infinite alternate;
+}
+
+.aurora-bg::before {
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(circle, var(--color-aura-400), transparent 70%);
+}
+
+.aurora-bg::after {
+  bottom: -15%;
+  right: -10%;
+  background: radial-gradient(circle, var(--color-teal-400), transparent 70%);
+  animation-delay: -8s;
+}
+
+.dark .aurora-bg::before,
+.dark .aurora-bg::after {
+  opacity: 0.35;
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(8%, 6%, 0) scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .aurora-bg::before,
+  .aurora-bg::after {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@layer components {
+  /* Core Liquid Glass surface. */
+  .glass {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    position: relative;
+  }
+
+  /* Specular highlight along the top edge mimics refracting glass. */
+  .glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(160deg, var(--glass-highlight), transparent 40%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .glass-strong {
+    background-color: var(--glass-bg-strong);
+  }
+
+  .text-muted {
+    color: var(--page-text-muted);
+  }
+
+  /* Focus ring honoring accessibility / clarity. */
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--color-aura-500);
+    outline-offset: 2px;
+  }
+}
+
+/* Reveal-on-scroll helper used by the v-reveal directive. */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s var(--ease-glass),
+    transform 0.7s var(--ease-glass);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
