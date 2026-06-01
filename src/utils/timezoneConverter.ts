@@ -26,6 +26,36 @@ export const COMMON_TIMEZONES = [
   'UTC',
 ] as const
 
+/**
+ * The current wall-clock date and time in a given IANA timezone, as strings
+ * suitable for the date/time pickers ('YYYY-MM-DD' and 'HH:mm').
+ */
+export function nowInTimezone(
+  timeZone: string,
+  at: Date = new Date(),
+): { date: string; time: string } {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      hour12: false,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).formatToParts(at)
+    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00'
+    const hour = get('hour') === '24' ? '00' : get('hour')
+    return {
+      date: `${get('year')}-${get('month')}-${get('day')}`,
+      time: `${hour}:${get('minute')}`,
+    }
+  } catch {
+    const iso = at.toISOString()
+    return { date: iso.slice(0, 10), time: iso.slice(11, 16) }
+  }
+}
+
 /** Detect the visitor's IANA timezone, falling back to UTC. */
 export function detectTimezone(): string {
   try {

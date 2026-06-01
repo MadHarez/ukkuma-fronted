@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppIcon from '@/components/ui/AppIcon.vue'
 
-const props = defineProps<{ modelValue: string; placeholder?: string }>()
+const props = defineProps<{ modelValue: string; placeholder?: string; min?: string }>()
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
 const { locale } = useI18n()
@@ -75,6 +75,10 @@ const displayLabel = computed(() => {
 
 const todayValue = format(today.getFullYear(), today.getMonth(), today.getDate())
 
+// A day is disabled when it falls before the `min` date (string compare works
+// because the 'YYYY-MM-DD' format is lexicographically ordered).
+const isDisabled = (value?: string) => !!value && !!props.min && value < props.min
+
 function prevMonth() {
   if (viewMonth.value === 0) {
     viewMonth.value = 11
@@ -89,7 +93,7 @@ function nextMonth() {
 }
 
 function choose(value?: string) {
-  if (!value) return
+  if (!value || isDisabled(value)) return
   emit('update:modelValue', value)
   open.value = false
 }
@@ -165,13 +169,16 @@ onBeforeUnmount(() => {
             <button
               v-else
               type="button"
+              :disabled="isDisabled(cell.value)"
               class="focus-ring mx-auto grid h-9 w-9 place-items-center rounded-full text-[var(--text-subhead)] transition-colors"
               :class="
-                cell.value === modelValue
-                  ? 'bg-gradient-to-br from-aura-500 to-aura-700 font-semibold text-white'
-                  : cell.value === todayValue
-                    ? 'text-aura-600 ring-1 ring-aura-500/40 dark:text-aura-300'
-                    : 'hover:bg-black/5 dark:hover:bg-white/10'
+                isDisabled(cell.value)
+                  ? 'cursor-not-allowed text-muted opacity-30'
+                  : cell.value === modelValue
+                    ? 'bg-gradient-to-br from-aura-500 to-aura-700 font-semibold text-white'
+                    : cell.value === todayValue
+                      ? 'text-aura-600 ring-1 ring-aura-500/40 dark:text-aura-300'
+                      : 'hover:bg-black/5 dark:hover:bg-white/10'
               "
               @click="choose(cell.value)"
             >

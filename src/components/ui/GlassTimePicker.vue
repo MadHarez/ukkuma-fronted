@@ -2,7 +2,13 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 
-const props = defineProps<{ modelValue: string; placeholder?: string; minuteStep?: number }>()
+const props = defineProps<{
+  modelValue: string
+  placeholder?: string
+  minuteStep?: number
+  /** Earliest selectable time as 'HH:mm'; earlier times are disabled. */
+  minTime?: string
+}>()
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
 const open = ref(false)
@@ -23,10 +29,26 @@ const minutes = computed(() => {
 const currentHour = computed(() => props.modelValue.split(':')[0] ?? '')
 const currentMinute = computed(() => props.modelValue.split(':')[1] ?? '')
 
+const minHour = computed(() => (props.minTime ? (props.minTime.split(':')[0] ?? '') : ''))
+const minMinute = computed(() => (props.minTime ? (props.minTime.split(':')[1] ?? '') : ''))
+
+// Whole hours earlier than the minimum hour are disabled.
+const isHourDisabled = (h: string) => !!props.minTime && h < minHour.value
+// Minutes are only constrained when the selected hour equals the minimum hour.
+const isMinuteDisabled = (m: string) =>
+  !!props.minTime && currentHour.value === minHour.value && m < minMinute.value
+
 function chooseHour(h: string) {
-  emit('update:modelValue', `${h}:${currentMinute.value || '00'}`)
+  if (isHourDisabled(h)) return
+  let minute = currentMinute.value || '00'
+  // When jumping to the minimum hour, bump an invalid minute up to the minimum.
+  if (props.minTime && h === minHour.value && minute < minMinute.value) {
+    minute = minMinute.value
+  }
+  emit('update:modelValue', `${h}:${minute}`)
 }
 function chooseMinute(m: string) {
+  if (isMinuteDisabled(m)) return
   emit('update:modelValue', `${currentHour.value || '00'}:${m}`)
 }
 
@@ -77,8 +99,12 @@ const itemClass = (active: boolean) =>
           <li
             v-for="h in hours"
             :key="h"
-            class="focus-ring cursor-pointer rounded-xl px-3 py-2 text-center text-[var(--text-subhead)] transition-colors"
-            :class="itemClass(h === currentHour)"
+            class="focus-ring rounded-xl px-3 py-2 text-center text-[var(--text-subhead)] transition-colors"
+            :class="
+              isHourDisabled(h)
+                ? 'cursor-not-allowed text-muted opacity-30'
+                : ['cursor-pointer', itemClass(h === currentHour)]
+            "
             @click="chooseHour(h)"
           >
             {{ h }}
@@ -89,8 +115,12 @@ const itemClass = (active: boolean) =>
           <li
             v-for="m in minutes"
             :key="m"
-            class="focus-ring cursor-pointer rounded-xl px-3 py-2 text-center text-[var(--text-subhead)] transition-colors"
-            :class="itemClass(m === currentMinute)"
+            class="focus-ring rounded-xl px-3 py-2 text-center text-[var(--text-subhead)] transition-colors"
+            :class="
+              isMinuteDisabled(m)
+                ? 'cursor-not-allowed text-muted opacity-30'
+                : ['cursor-pointer', itemClass(m === currentMinute)]
+            "
             @click="chooseMinute(m)"
           >
             {{ m }}

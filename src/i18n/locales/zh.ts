@@ -118,6 +118,8 @@ export default {
     empty: '暂时还没有文章。',
     related: '相关文章',
     by: '作者',
+    searchPlaceholder: '搜索文章标题或内容...',
+    allTags: '全部标签',
   },
   projects: {
     title: '项目',
@@ -158,6 +160,10 @@ export default {
     errorName: '请填写称呼',
     errorEmail: '请填写有效的邮箱',
     errorService: '请选择服务类型',
+    errorDate: '请选择期望日期',
+    errorDatePast: '日期不能早于今天',
+    errorTime: '请选择期望时段',
+    errorTimePast: '时间不能早于当前时间',
     services: {
       reading: '占卜解读',
       cleansing: '能量清理',

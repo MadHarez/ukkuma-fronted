@@ -123,6 +123,8 @@ export default {
     empty: 'No articles yet.',
     related: 'Related articles',
     by: 'By',
+    searchPlaceholder: 'Search articles...',
+    allTags: 'All Tags',
   },
   projects: {
     title: 'Projects',
@@ -163,6 +165,10 @@ export default {
     errorName: 'Please enter your name',
     errorEmail: 'Please enter a valid email',
     errorService: 'Please choose a service',
+    errorDate: 'Please choose a date',
+    errorDatePast: 'The date cannot be earlier than today',
+    errorTime: 'Please choose a time',
+    errorTimePast: 'The time cannot be in the past',
     services: {
       reading: 'Divination Reading',
       cleansing: 'Energy Cleansing',

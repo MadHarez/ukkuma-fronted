@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHero from '@/components/ui/PageHero.vue'
 import GlassCard from '@/components/ui/GlassCard.vue'
@@ -12,6 +12,7 @@ import { bookingService } from '@/api/services'
 import {
   COMMON_TIMEZONES,
   detectTimezone,
+  nowInTimezone,
   offsetLabel,
   toPractitionerTime,
 } from '@/utils/timezoneConverter'
@@ -42,6 +43,23 @@ const form = reactive<BookingPayload>({
 // The visitor's own offset, shown for clarity.
 const yourOffset = computed(() => offsetLabel(form.timezone))
 
+// Earliest selectable date/time, evaluated in the visitor's chosen timezone so
+// past slots cannot be booked. Time is only constrained when the chosen date is
+// today (in that zone).
+const minDate = computed(() => nowInTimezone(form.timezone).date)
+const minTime = computed(() => {
+  const now = nowInTimezone(form.timezone)
+  return form.date === now.date ? now.time : undefined
+})
+
+// If the date or timezone changes such that the chosen time is now in the past,
+// clear the stale time so the user must re-pick a valid slot.
+watch([() => form.date, () => form.timezone], () => {
+  const now = nowInTimezone(form.timezone)
+  if (form.date && form.date < now.date) form.date = ''
+  if (form.time && form.date === now.date && form.time < now.time) form.time = ''
+})
+
 // Live conversion of the chosen wall time into the practitioner's NZ time.
 const converted = computed(() =>
   toPractitionerTime(form.date, form.time, form.timezone, locale.value as AppLocale),
@@ -65,6 +83,11 @@ function validate(): boolean {
   if (!form.name.trim()) errors.name = t('booking.errorName')
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = t('booking.errorEmail')
   if (!form.service) errors.service = t('booking.errorService')
+  const now = nowInTimezone(form.timezone)
+  if (!form.date) errors.date = t('booking.errorDate')
+  else if (form.date < now.date) errors.date = t('booking.errorDatePast')
+  if (!form.time) errors.time = t('booking.errorTime')
+  else if (form.date === now.date && form.time < now.time) errors.time = t('booking.errorTimePast')
   return Object.keys(errors).length === 0
 }
 
@@ -160,11 +183,13 @@ function reset() {
             <div class="grid gap-5 sm:grid-cols-2">
               <div>
                 <label class="mb-1.5 block text-[var(--text-subhead)] font-medium">{{ t('booking.formDate') }}</label>
-                <GlassDatePicker v-model="form.date" />
+                <GlassDatePicker v-model="form.date" :min="minDate" />
+                <p v-if="errors.date" class="mt-1 text-[var(--text-footnote)] text-red-500">{{ errors.date }}</p>
               </div>
               <div>
                 <label class="mb-1.5 block text-[var(--text-subhead)] font-medium">{{ t('booking.formTime') }}</label>
-                <GlassTimePicker v-model="form.time" />
+                <GlassTimePicker v-model="form.time" :min-time="minTime" />
+                <p v-if="errors.time" class="mt-1 text-[var(--text-footnote)] text-red-500">{{ errors.time }}</p>
               </div>
             </div>
 
