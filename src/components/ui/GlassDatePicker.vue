@@ -12,9 +12,15 @@ const intlLocale = computed(() => (locale.value === 'zh' ? 'zh-CN' : 'en-GB'))
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
 
+type ViewMode = 'days' | 'months' | 'years'
+const viewMode = ref<ViewMode>('days')
+
 const today = new Date()
 const viewYear = ref(today.getFullYear())
 const viewMonth = ref(today.getMonth()) // 0-11
+
+// First year shown in the 12-year grid of the year picker.
+const yearPageStart = ref(today.getFullYear() - 6)
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
@@ -43,6 +49,24 @@ const monthLabel = computed(() =>
     new Date(viewYear.value, viewMonth.value, 1),
   ),
 )
+
+// Localized short month names for the month picker grid.
+const monthNames = computed(() => {
+  const fmt = new Intl.DateTimeFormat(intlLocale.value, { month: 'short' })
+  return Array.from({ length: 12 }, (_, i) => fmt.format(new Date(2024, i, 1)))
+})
+
+// The 12 years shown in the year picker grid.
+const years = computed(() =>
+  Array.from({ length: 12 }, (_, i) => yearPageStart.value + i),
+)
+
+// Header label adapts to the active view mode.
+const headerLabel = computed(() => {
+  if (viewMode.value === 'months') return String(viewYear.value)
+  if (viewMode.value === 'years') return `${years.value[0]} – ${years.value[years.value.length - 1]}`
+  return monthLabel.value
+})
 
 // Localized short weekday names, starting on Sunday to match Date.getDay().
 const weekdays = computed(() => {
@@ -74,10 +98,20 @@ const displayLabel = computed(() => {
 })
 
 const todayValue = format(today.getFullYear(), today.getMonth(), today.getDate())
+const thisYear = today.getFullYear()
+const thisMonth = today.getMonth()
 
 // A day is disabled when it falls before the `min` date (string compare works
 // because the 'YYYY-MM-DD' format is lexicographically ordered).
 const isDisabled = (value?: string) => !!value && !!props.min && value < props.min
+
+// Lower bounds parsed from `min` for the month/year pickers.
+const minYear = computed(() => (props.min ? Number(props.min.split('-')[0]) : null))
+const minMonthKey = computed(() => (props.min ? props.min.slice(0, 7) : null))
+
+const isYearDisabled = (y: number) => minYear.value !== null && y < minYear.value
+const isMonthDisabled = (m: number) =>
+  minMonthKey.value !== null && `${viewYear.value}-${pad(m + 1)}` < minMonthKey.value
 
 function prevMonth() {
   if (viewMonth.value === 0) {
@@ -92,10 +126,44 @@ function nextMonth() {
   } else viewMonth.value += 1
 }
 
+// Header navigation arrows operate on whatever unit the current view shows.
+function prev() {
+  if (viewMode.value === 'days') prevMonth()
+  else if (viewMode.value === 'months') viewYear.value -= 1
+  else yearPageStart.value -= 12
+}
+function next() {
+  if (viewMode.value === 'days') nextMonth()
+  else if (viewMode.value === 'months') viewYear.value += 1
+  else yearPageStart.value += 12
+}
+
+// Tapping the header drills out: days → months → years.
+function stepUp() {
+  if (viewMode.value === 'days') viewMode.value = 'months'
+  else if (viewMode.value === 'months') {
+    yearPageStart.value = viewYear.value - 6
+    viewMode.value = 'years'
+  }
+}
+
+function chooseYear(y: number) {
+  if (isYearDisabled(y)) return
+  viewYear.value = y
+  viewMode.value = 'months'
+}
+
+function chooseMonth(m: number) {
+  if (isMonthDisabled(m)) return
+  viewMonth.value = m
+  viewMode.value = 'days'
+}
+
 function choose(value?: string) {
   if (!value || isDisabled(value)) return
   emit('update:modelValue', value)
   open.value = false
+  viewMode.value = 'days'
 }
 
 function onClickOutside(e: MouseEvent) {
@@ -142,25 +210,33 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="focus-ring grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-black/5 hover:text-[var(--page-text)] dark:hover:bg-white/10"
-            @click="prevMonth"
+            @click="prev"
           >
             <AppIcon name="arrowLeft" :size="18" />
           </button>
-          <span class="text-[var(--text-subhead)] font-semibold">{{ monthLabel }}</span>
+          <button
+            type="button"
+            class="focus-ring rounded-xl px-3 py-1 text-[var(--text-subhead)] font-semibold transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+            :class="viewMode === 'years' ? 'cursor-default' : ''"
+            @click="stepUp"
+          >
+            {{ headerLabel }}
+          </button>
           <button
             type="button"
             class="focus-ring grid h-9 w-9 place-items-center rounded-full text-muted transition-colors hover:bg-black/5 hover:text-[var(--page-text)] dark:hover:bg-white/10"
-            @click="nextMonth"
+            @click="next"
           >
             <AppIcon name="arrowRight" :size="18" />
           </button>
         </div>
 
-        <div class="grid grid-cols-7 gap-1 text-center">
+        <!-- Day grid -->
+        <div v-if="viewMode === 'days'" class="grid grid-cols-7 gap-1 text-center">
           <span
             v-for="w in weekdays"
             :key="w"
-            class="py-1 text-[var(--text-caption)] font-semibold uppercase text-muted"
+            class="mx-auto grid h-8 w-9 place-items-center text-[var(--text-caption)] font-semibold uppercase text-muted"
           >
             {{ w }}
           </span>
@@ -185,6 +261,52 @@ onBeforeUnmount(() => {
               {{ cell.day }}
             </button>
           </template>
+        </div>
+
+        <!-- Month grid -->
+        <div v-else-if="viewMode === 'months'" class="grid grid-cols-3 gap-2">
+          <button
+            v-for="(name, m) in monthNames"
+            :key="m"
+            type="button"
+            :disabled="isMonthDisabled(m)"
+            class="focus-ring grid h-12 place-items-center rounded-xl text-[var(--text-subhead)] transition-colors"
+            :class="
+              isMonthDisabled(m)
+                ? 'cursor-not-allowed text-muted opacity-30'
+                : m === viewMonth
+                  ? 'bg-gradient-to-br from-aura-500 to-aura-700 font-semibold text-white'
+                  : viewYear === thisYear && m === thisMonth
+                    ? 'text-aura-600 ring-1 ring-aura-500/40 dark:text-aura-300'
+                    : 'hover:bg-black/5 dark:hover:bg-white/10'
+            "
+            @click="chooseMonth(m)"
+          >
+            {{ name }}
+          </button>
+        </div>
+
+        <!-- Year grid -->
+        <div v-else class="grid grid-cols-3 gap-2">
+          <button
+            v-for="y in years"
+            :key="y"
+            type="button"
+            :disabled="isYearDisabled(y)"
+            class="focus-ring grid h-12 place-items-center rounded-xl text-[var(--text-subhead)] transition-colors"
+            :class="
+              isYearDisabled(y)
+                ? 'cursor-not-allowed text-muted opacity-30'
+                : y === viewYear
+                  ? 'bg-gradient-to-br from-aura-500 to-aura-700 font-semibold text-white'
+                  : y === thisYear
+                    ? 'text-aura-600 ring-1 ring-aura-500/40 dark:text-aura-300'
+                    : 'hover:bg-black/5 dark:hover:bg-white/10'
+            "
+            @click="chooseYear(y)"
+          >
+            {{ y }}
+          </button>
         </div>
       </div>
     </Transition>
