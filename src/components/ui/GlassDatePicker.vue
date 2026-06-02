@@ -8,6 +8,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
 const { locale } = useI18n()
 const intlLocale = computed(() => (locale.value === 'zh' ? 'zh-CN' : 'en-GB'))
+const isEn = computed(() => locale.value === 'en')
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -216,8 +217,9 @@ onBeforeUnmount(() => {
           </button>
           <button
             type="button"
-            class="focus-ring rounded-xl px-3 py-1 text-[var(--text-subhead)] font-semibold transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+            class="focus-ring rounded-xl px-3 py-1 font-semibold transition-colors hover:bg-black/5 dark:hover:bg-white/10"
             :class="viewMode === 'years' ? 'cursor-default' : ''"
+            :style="{ fontSize: isEn ? '13px' : '15px' }"
             @click="stepUp"
           >
             {{ headerLabel }}
@@ -236,7 +238,8 @@ onBeforeUnmount(() => {
           <span
             v-for="w in weekdays"
             :key="w"
-            class="mx-auto grid h-8 w-9 place-items-center text-[var(--text-caption)] font-semibold uppercase text-muted"
+            class="mx-auto grid h-8 w-9 place-items-center font-semibold uppercase text-muted"
+            :style="{ fontSize: isEn ? '10px' : '12px' }"
           >
             {{ w }}
           </span>
@@ -246,7 +249,7 @@ onBeforeUnmount(() => {
               v-else
               type="button"
               :disabled="isDisabled(cell.value)"
-              class="focus-ring mx-auto grid h-9 w-9 place-items-center rounded-full text-[var(--text-subhead)] transition-colors"
+              class="focus-ring mx-auto grid h-9 w-9 place-items-center rounded-full transition-colors"
               :class="
                 isDisabled(cell.value)
                   ? 'cursor-not-allowed text-muted opacity-30'
@@ -256,6 +259,7 @@ onBeforeUnmount(() => {
                       ? 'text-aura-600 ring-1 ring-aura-500/40 dark:text-aura-300'
                       : 'hover:bg-black/5 dark:hover:bg-white/10'
               "
+              :style="{ fontSize: isEn ? '13px' : '15px' }"
               @click="choose(cell.value)"
             >
               {{ cell.day }}
@@ -270,7 +274,7 @@ onBeforeUnmount(() => {
             :key="m"
             type="button"
             :disabled="isMonthDisabled(m)"
-            class="focus-ring grid h-12 place-items-center rounded-xl text-[var(--text-subhead)] transition-colors"
+            class="focus-ring grid h-12 place-items-center rounded-xl transition-colors"
             :class="
               isMonthDisabled(m)
                 ? 'cursor-not-allowed text-muted opacity-30'
@@ -280,6 +284,7 @@ onBeforeUnmount(() => {
                     ? 'text-aura-600 ring-1 ring-aura-500/40 dark:text-aura-300'
                     : 'hover:bg-black/5 dark:hover:bg-white/10'
             "
+            :style="{ fontSize: isEn ? '13px' : '15px' }"
             @click="chooseMonth(m)"
           >
             {{ name }}
@@ -293,7 +298,7 @@ onBeforeUnmount(() => {
             :key="y"
             type="button"
             :disabled="isYearDisabled(y)"
-            class="focus-ring grid h-12 place-items-center rounded-xl text-[var(--text-subhead)] transition-colors"
+            class="focus-ring grid h-12 place-items-center rounded-xl transition-colors"
             :class="
               isYearDisabled(y)
                 ? 'cursor-not-allowed text-muted opacity-30'
@@ -303,6 +308,7 @@ onBeforeUnmount(() => {
                     ? 'text-aura-600 ring-1 ring-aura-500/40 dark:text-aura-300'
                     : 'hover:bg-black/5 dark:hover:bg-white/10'
             "
+            :style="{ fontSize: isEn ? '13px' : '15px' }"
             @click="chooseYear(y)"
           >
             {{ y }}
